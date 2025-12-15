@@ -21,24 +21,54 @@
       -moz-osx-font-smoothing: grayscale;
       position: relative;
       min-height: 100vh;
+      overflow-x: hidden;
+      background: linear-gradient(to bottom, #0a0a2a, #1a1a3a);
     }
 
-    /* Background Video dengan Transparansi */
-    .video-background {
+    /* Rain Effect */
+    .rain-container {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      z-index: -1;
-      opacity: 0.15; /* Transparansi 15% */
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
     }
 
-    /* Overlay untuk konten tetap terbaca */
+    .raindrop {
+      position: absolute;
+      background: linear-gradient(to bottom, transparent, rgba(173, 216, 230, 0.6));
+      width: 2px;
+      height: 20px;
+      border-radius: 0 0 5px 5px;
+      animation: fall linear infinite;
+    }
+
+    /* Lightning Effect */
+    .lightning {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: white;
+      opacity: 0;
+      z-index: 1;
+      pointer-events: none;
+      animation: lightningFlash 5s infinite;
+    }
+
+    /* Thunder Sound Effect */
+    .thunder-sound {
+      display: none;
+    }
+
+    /* Content Overlay */
     .content-overlay {
       position: relative;
-      z-index: 1;
+      z-index: 2;
     }
 
     /* Custom Slider Styles */
@@ -80,6 +110,54 @@
       border: 2px solid white;
     }
 
+    /* Animations */
+    @keyframes fall {
+      0% {
+        transform: translateY(-100px) rotate(15deg);
+        opacity: 0;
+      }
+      10% {
+        opacity: 1;
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(100vh) rotate(15deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes lightningFlash {
+      0%, 85%, 100% {
+        opacity: 0;
+      }
+      88% {
+        opacity: 0.3;
+      }
+      89% {
+        opacity: 0.8;
+      }
+      90% {
+        opacity: 0.2;
+      }
+      91% {
+        opacity: 0.9;
+      }
+      92% {
+        opacity: 0;
+      }
+      93% {
+        opacity: 0.4;
+      }
+      94%, 96% {
+        opacity: 0;
+      }
+      95% {
+        opacity: 0.6;
+      }
+    }
+
     @keyframes pulse {
       0%, 100% {
         opacity: 1;
@@ -92,19 +170,151 @@
     .animate-pulse {
       animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
+
+    /* Cloud Effects */
+    .cloud {
+      position: absolute;
+      background: rgba(100, 100, 120, 0.3);
+      border-radius: 50px;
+      filter: blur(20px);
+      z-index: 0;
+    }
+
+    .cloud-1 {
+      width: 200px;
+      height: 60px;
+      top: 10%;
+      left: 10%;
+    }
+
+    .cloud-2 {
+      width: 150px;
+      height: 50px;
+      top: 15%;
+      right: 15%;
+    }
+
+    .cloud-3 {
+      width: 180px;
+      height: 55px;
+      bottom: 20%;
+      left: 20%;
+    }
+
+    /* Rain Sound Effect */
+    .rain-sound {
+      display: none;
+    }
   </style>
 </head>
 <body>
-  <!-- Video Background Transparan -->
-  <video autoplay loop muted playsinline class="video-background">
-    <source src="video.mp4" type="video/mp4">
-    Browser tidak mendukung video.
-  </video>
+  <!-- Rain Effect Container -->
+  <div id="rain-container" class="rain-container"></div>
+  
+  <!-- Clouds -->
+  <div class="cloud cloud-1"></div>
+  <div class="cloud cloud-2"></div>
+  <div class="cloud cloud-3"></div>
+  
+  <!-- Lightning Effect -->
+  <div class="lightning"></div>
+  
+  <!-- Audio Elements -->
+  <audio id="rainSound" class="rain-sound" loop>
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-rain-loop-1245.mp3" type="audio/mpeg">
+  </audio>
+  
+  <audio id="thunderSound" class="thunder-sound">
+    <source src="https://assets.mixkit.co/sfx/preview/mixkit-thunder-rumble-1182.mp3" type="audio/mpeg">
+  </audio>
 
   <div id="root" class="content-overlay"></div>
 
   <script type="text/babel">
     const { useState, useRef, useEffect } = React;
+
+    // Rain Effect Component
+    function RainEffect() {
+      const rainContainerRef = useRef(null);
+      const rainSoundRef = useRef(null);
+      const thunderSoundRef = useRef(null);
+      const [rainIntensity, setRainIntensity] = useState(150);
+
+      useEffect(() => {
+        const container = rainContainerRef.current;
+        if (!container) return;
+
+        // Clear existing raindrops
+        container.innerHTML = '';
+
+        // Create raindrops
+        for (let i = 0; i < rainIntensity; i++) {
+          const raindrop = document.createElement('div');
+          raindrop.className = 'raindrop';
+          
+          // Random position and animation
+          const left = Math.random() * 100;
+          const animationDuration = 0.5 + Math.random() * 1.5;
+          const animationDelay = Math.random() * 5;
+          const height = 15 + Math.random() * 15;
+          const opacity = 0.3 + Math.random() * 0.7;
+          
+          raindrop.style.left = `${left}%`;
+          raindrop.style.height = `${height}px`;
+          raindrop.style.animationDuration = `${animationDuration}s`;
+          raindrop.style.animationDelay = `${animationDelay}s`;
+          raindrop.style.opacity = opacity;
+          
+          container.appendChild(raindrop);
+        }
+
+        // Start rain sound
+        if (rainSoundRef.current) {
+          rainSoundRef.current.volume = 0.3;
+          rainSoundRef.current.play().catch(e => console.log("Rain sound autoplay blocked"));
+        }
+
+        // Play thunder randomly
+        const playThunder = () => {
+          if (thunderSoundRef.current) {
+            thunderSoundRef.current.volume = 0.2;
+            thunderSoundRef.current.currentTime = 0;
+            thunderSoundRef.current.play().catch(e => console.log("Thunder sound error"));
+          }
+        };
+
+        // Random thunder intervals (15-25 seconds)
+        const thunderInterval = setInterval(() => {
+          playThunder();
+        }, 15000 + Math.random() * 10000);
+
+        return () => {
+          clearInterval(thunderInterval);
+        };
+      }, [rainIntensity]);
+
+      // Initialize audio refs
+      useEffect(() => {
+        rainSoundRef.current = document.getElementById('rainSound');
+        thunderSoundRef.current = document.getElementById('thunderSound');
+      }, []);
+
+      // Handle user interaction for audio
+      const enableAudio = () => {
+        if (rainSoundRef.current) {
+          rainSoundRef.current.play().catch(e => console.log("Audio play requires user interaction"));
+        }
+      };
+
+      return (
+        <div 
+          className="rain-container" 
+          ref={rainContainerRef}
+          onClick={enableAudio}
+          style={{ cursor: 'pointer' }}
+        />
+      );
+    }
 
     // Music Player Component
     function MusicPlayer() {
@@ -118,16 +328,10 @@
       // PLAYLIST DENGAN FILE LOKAL
       const playlist = [
         {
-          title: "Mabuk Cinta",
+          title: "Sedia Aku Sebelum Hujan",
           artist: "Putar Lagunya Dong Ris",
-          url: "untuk_riska.mp3"  // File lokal
+          url: "untuk_riska.mp3"
         }
-        // Jika ada lagu lain, tambahkan di sini
-        // {
-        //   title: "Lagu Kedua",
-        //   artist: "Fahrul",
-        //   url: "lagu_kedua.mp3"
-        // }
       ];
 
       const currentSong = playlist[currentSongIndex];
@@ -164,7 +368,6 @@
           } else {
             audioRef.current.play().catch(e => {
               console.log("Auto-play mungkin diblokir:", e);
-              // User perlu interaksi dulu
             });
           }
           setIsPlaying(!isPlaying);
@@ -210,12 +413,12 @@
       };
 
       return (
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 text-gray-800 shadow-2xl border border-white/40">
+        <div className="bg-gray-900/70 backdrop-blur-xl rounded-2xl p-6 text-white shadow-2xl border border-white/20">
           <audio ref={audioRef} src={currentSong.url} />
           
           <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold mb-1 text-gray-900">{currentSong.title}</h3>
-            <p className="text-gray-700">{currentSong.artist}</p>
+            <h3 className="text-2xl font-bold mb-1 text-white">{currentSong.title}</h3>
+            <p className="text-gray-300">{currentSong.artist}</p>
           </div>
 
           <div className="mb-4">
@@ -229,7 +432,7 @@
                 className="w-full"
               />
             </div>
-            <div className="flex justify-between text-xs text-gray-600 mt-2">
+            <div className="flex justify-between text-xs text-gray-300 mt-2">
               <span>{formatTime(currentTime)}</span>
               <span>{formatTime(duration)}</span>
             </div>
@@ -238,7 +441,7 @@
           <div className="flex items-center justify-center gap-6 mb-4">
             <button
               onClick={prevSong}
-              className="hover:text-pink-600 transition-colors text-gray-700"
+              className="hover:text-pink-400 transition-colors text-gray-300"
               disabled={playlist.length <= 1}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,7 +451,7 @@
             
             <button
               onClick={togglePlay}
-              className="bg-pink-500 hover:bg-pink-600 rounded-full p-4 transition-all hover:scale-105 shadow-lg"
+              className="bg-pink-600 hover:bg-pink-700 rounded-full p-4 transition-all hover:scale-105 shadow-lg"
             >
               {isPlaying ? (
                 <svg className="w-6 h-6" fill="white" viewBox="0 0 24 24">
@@ -263,7 +466,7 @@
             
             <button
               onClick={nextSong}
-              className="hover:text-pink-600 transition-colors text-gray-700"
+              className="hover:text-pink-400 transition-colors text-gray-300"
               disabled={playlist.length <= 1}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,7 +476,7 @@
           </div>
 
           <div className="flex items-center gap-3">
-            <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 0 1 0 7.072m2.828-9.9a9 9 0 0 1 0 12.728M5.586 15H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15Z" />
             </svg>
             <div className="custom-slider flex-1">
@@ -295,25 +498,28 @@
     function App() {
       return (
         <div className="min-h-screen">
+          {/* Rain Effect */}
+          <RainEffect />
+          
           {/* Header */}
-          <div className="bg-white/80 backdrop-blur-sm border-b">
+          <div className="bg-gray-900/70 backdrop-blur-sm border-b border-gray-700">
             <div className="max-w-6xl mx-auto px-4 py-8">
               {/* Name Section */}
               <div className="text-center mb-6">
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-purple-500 bg-clip-text text-transparent mb-2">
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent mb-2">
                   Riska Amelia
                 </h1>
-                <p className="text-gray-600 italic text-lg">
+                <p className="text-gray-300 italic text-lg">
                   From Fahrul to Riska
                 </p>
               </div>
 
-              {/* Avatar Section - PAKAI FILE LOKAL */}
+              {/* Avatar Section */}
               <div className="flex flex-col items-center gap-4">
                 <div className="relative">
-                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-pink-300 shadow-lg">
+                  <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-pink-400/50 shadow-lg">
                     <img
-                      src="avatar.jpg"  // FILE LOKAL
+                      src="avatar.jpg"
                       alt="Riska Amelia"
                       className="w-full h-full object-cover"
                       onError={(e) => {
@@ -322,11 +528,11 @@
                       }}
                     />
                   </div>
-                  <svg className="w-6 h-6 text-red-500 fill-red-500 absolute -bottom-1 -right-1 animate-pulse" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6 text-red-400 fill-red-400 absolute -bottom-1 -right-1 animate-pulse" viewBox="0 0 24 24">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
                   </svg>
                 </div>
-                <p className="text-gray-700 text-center max-w-md">
+                <p className="text-gray-300 text-center max-w-md">
                   Website ini dibuat khusus untuk, Riska.
                 </p>
               </div>
@@ -336,17 +542,17 @@
           {/* Hero Section with Music Player */}
           <div className="max-w-6xl mx-auto px-4 py-8">
             <div className="relative h-64 rounded-2xl overflow-hidden mb-8 shadow-xl">
-              <div className="absolute inset-0 bg-gradient-to-br from-pink-200/50 via-purple-200/50 to-rose-200/50 flex items-center justify-center p-6">
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-900/60 via-purple-900/40 to-pink-900/40 flex items-center justify-center p-6">
                 <div className="w-full max-w-md">
                   <MusicPlayer />
                 </div>
               </div>
             </div>
 
-            {/* Letter Content */}
-            <div className="max-w-3xl mx-auto bg-white/90 backdrop-blur-sm rounded-lg shadow-xl">
-              <div className="p-6 border-b">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
+            {/* Letter Content - TELAH DIUBAH */}
+            <div className="max-w-3xl mx-auto bg-gray-900/70 backdrop-blur-sm rounded-lg shadow-xl border border-gray-700">
+              <div className="p-6 border-b border-gray-700">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
@@ -354,41 +560,46 @@
                 </h2>
               </div>
               <div className="p-6">
-                <div className="bg-gradient-to-br from-pink-50 to-purple-50 p-8 rounded-lg border-2 border-pink-200 shadow-inner">
-                  <div className="space-y-4 font-serif text-gray-700 leading-relaxed">
-                    <p>dari dulu gue kagum sama lo, Ris, beneran.</p>
-                    <p>tapi jujur agak nyesek pas tau lo udah punya cowok.</p>
-                    <p>bukan marah, bukan nyalahin siapa-siapa juga,</p>
-                    <p>cuma ya… sakit dikit aja 🤏</p>
+                <div className="bg-gradient-to-br from-gray-800/80 to-purple-900/50 p-8 rounded-lg border-2 border-pink-900/30 shadow-inner">
+                  <div className="space-y-4 font-serif text-gray-200 leading-relaxed">
+                    <p>hehe makasih ya ris jawabanya,</p>
+                    <p>ini bukan contoh ya tapi emng bener buat kamu tauu,</p>
+                    <p>btw kita emng cocoknya temen aja</p>
+                    <p>lagipun aku ngga cocok buat kamu,</p>
                     
-                    <p className="pt-4">gue sadar posisi gue di hidup lo bukan siapa-siapa.</p>
-                    <p>bahkan secara fisik pun, kayaknya kecil kemungkinan lo bakal suka sama gue wkwk.</p>
-                    <p>gue nggak nyalahin keadaan,</p>
-                    <p>gue cuma lagi realistis sama diri sendiri.</p>
+                    <p className="pt-4">udh kalah fisik kalah ekonomi</p>
+                    <p>pokoknya kalah semua deh hihi,</p>
+                    <p>tapi udah lega aja bisa ngeluapin unek2 ke kamu,</p>
+                    <p>bayangin aja ngempet perasaan dari smp kelas 8,</p>
                     
-                    <p className="pt-4">mungkin gue emang bukan yang lo cari,</p>
-                    <p>bukan yang lo pilih,</p>
-                    <p>dan mungkin juga nggak pernah jadi opsi.</p>
+                    <p className="pt-4">kayaknya kalo semisal ketemu</p>
+                    <p>gw bakal canggung njirlahhh...</p>
+                    <p>tapi gapapa lah ya,</p>
+                    <p>yang penting udah keluar semua.</p>
                     
-                    <p className="pt-4">jadi gue simpen aja rasa ini,</p>
-                    <p>nggak maksa, nggak nuntut, nggak drama.</p>
-                    <p>pelan-pelan belajar nerima, belajar dewasa,</p>
-                    <p>belajar ngerelain tanpa harus benci.</p>
+                    <p className="pt-4">gue tetep seneng bisa kenal lo,</p>
+                    <p>dan tetep mau jadi temen lo kalo lo mau.</p>
+                    <p>jangan ilang ya, meskipun cuma temen.</p>
                     
-                    <p className="pt-4">gue cuma berharap lo bahagia sama pilihan lo sekarang, Ris.</p>
-                    <p>dan kalo suatu hari lo keinget gue,</p>
-                    <p>semoga bukan sebagai orang yang bikin luka,</p>
-                    <p>tapi sebagai orang yang tulus kagum…</p>
-                    <p>meski cuma dari jauh.</p>
+                    <p className="pt-4">sekali lagi makasih udah dengerin,</p>
+                    <p>dan maaf kalo bikin lo awkward.</p>
+                    <p>tapi beneran, gue lega banget sekarang.</p>
+                    
+                    <p className="pt-4 text-right italic text-gray-300">
+                      
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Footer */}
-            <div className="mt-12 text-center text-gray-600 pb-8">
+            <div className="mt-12 text-center text-gray-400 pb-8">
               <p className="flex items-center justify-center gap-2">
                 Developer By Fahrul Riskiana
+              </p>
+              <p className="text-sm mt-2 text-gray-500">
+                Hehe
               </p>
             </div>
           </div>
@@ -399,6 +610,18 @@
     // Render App
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
+
+    // Initialize rain effect
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add click anywhere to enable audio
+      document.body.addEventListener('click', function() {
+        const rainSound = document.getElementById('rainSound');
+        if (rainSound) {
+          rainSound.volume = 0.3;
+          rainSound.play().catch(e => console.log("Audio requires user interaction"));
+        }
+      }, { once: true });
+    });
   </script>
 </body>
 </html>
